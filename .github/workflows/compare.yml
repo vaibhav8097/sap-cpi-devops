@@ -1,0 +1,39 @@
+name: Compare Backups
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+
+  compare:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compare Backups
+        run: |
+          python scripts/compare.py
+
+      - name: Commit Report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions@github.com"
+
+          git add reports/
+
+          if git diff --cached --quiet; then
+            echo "No changes."
+          else
+            git commit -m "Generated Compare Report"
+            git push
+          fi
