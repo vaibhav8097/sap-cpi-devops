@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 from datetime import datetime
@@ -12,27 +13,29 @@ from scripts.common.utils import create_folder
 
 def main():
 
-    # ==========================================
+    # ==========================================================
     # Create Backup Folders
-    # ==========================================
+    # ==========================================================
 
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
     history_folder = os.path.join("backup", "history", timestamp)
     latest_folder = os.path.join("backup", "latest")
+    reports_folder = "reports"
 
     create_folder(history_folder)
     create_folder(latest_folder)
+    create_folder(reports_folder)
 
     log("=" * 60)
-    log("SAP CPI Backup Started")
+    log("SAP CPI Enterprise Backup Started")
     log("=" * 60)
 
-    # ==========================================
+    # ==========================================================
     # Authentication
-    # ==========================================
+    # ==========================================================
 
-    log("[1/4] Authenticating with SAP Integration Suite...")
+    log("[1/4] Authenticating...")
 
     token = get_access_token()
     api_url = get_api_url()
@@ -44,36 +47,49 @@ def main():
 
     log("Authentication Successful")
 
-    # ==========================================
+    # ==========================================================
     # Fetch Packages
-    # ==========================================
+    # ==========================================================
 
     log("[2/4] Fetching Integration Packages...")
 
-    packages_response = requests.get(
+    response = requests.get(
         f"{api_url}/api/v1/IntegrationPackages",
         headers=headers,
     )
 
-    packages_response.raise_for_status()
+    response.raise_for_status()
 
-    packages = packages_response.json()["d"]["results"]
+    packages = response.json()["d"]["results"]
 
     log(f"Packages Found : {len(packages)}")
 
-    download_count = 0
+    package_count = 0
+    artifact_count = 0
+    failed_downloads = 0
 
-    # ==========================================
-    # Download Artifacts
-    # ==========================================
+    # ==========================================================
+    # Download Packages
+    # ==========================================================
 
     log("[3/4] Downloading Integration Artifacts...")
 
     for package in packages:
 
+        package_count += 1
+
         package_id = package["Id"]
 
+        log("")
         log(f"Processing Package : {package_id}")
+
+        package_history = os.path.join(history_folder, package_id)
+        package_latest = os.path.join(latest_folder, package_id)
+
+        create_folder(package_history)
+        create_folder(package_latest)
+
+        artifacts_downloaded = []
 
         artifacts_response = requests.get(
             f"{api_url}/api/v1/IntegrationPackages('{package_id}')/IntegrationDesigntimeArtifacts",
@@ -81,10 +97,13 @@ def main():
         )
 
         if artifacts_response.status_code != 200:
+
             log(f"Unable to fetch artifacts for {package_id}")
             continue
 
         artifacts = artifacts_response.json()["d"]["results"]
+
+        log(f"Artifacts Found : {len(artifacts)}")
 
         for artifact in artifacts:
 
@@ -94,7 +113,8 @@ def main():
 
             download_url = (
                 f"{api_url}/api/v1/"
-                f"IntegrationDesigntimeArtifacts(Id='{artifact_id}',Version='active')/$value"
+                f"IntegrationDesigntimeArtifacts"
+                f"(Id='{artifact_id}',Version='active')/$value"
             )
 
             zip_response = requests.get(
@@ -106,42 +126,142 @@ def main():
 
             if zip_response.status_code == 200:
 
-                history_file = os.path.join(
-                    history_folder,
+                history_zip = os.path.join(
+                    package_history,
                     f"{artifact_id}.zip",
                 )
 
-                with open(history_file, "wb") as file:
+                with open(history_zip, "wb") as file:
                     file.write(zip_response.content)
 
                 shutil.copy2(
-                    history_file,
+                    history_zip,
                     os.path.join(
-                        latest_folder,
+                        package_latest,
                         f"{artifact_id}.zip",
                     ),
                 )
 
-                download_count += 1
+                artifact_count += 1
+
+                artifacts_downloaded.append(
+                    {
+                        "artifact": artifact_id,
+                        "type": artifact.get("ArtifactType"),
+                        "version": artifact.get("Version"),
+                    }
+                )
 
             else:
-                log(f"Failed to download {artifact_id}")
 
-    # ==========================================
-    # Summary
-    # ==========================================
+                failed_downloads += 1
 
-    log("[4/4] Backup Summary")
+                log(f"Failed : {artifact_id}")
 
-    log("-" * 60)
+        # ======================================================
+        # Package Metadata
+        # ======================================================
 
-    log(f"Packages Processed : {len(packages)}")
-    log(f"Artifacts Downloaded : {download_count}")
+        metadata = {
 
+            "package": package_id,
+
+            "backup_time": timestamp,
+
+            "artifact_count": len(artifacts_downloaded),
+
+            "artifacts": artifacts_downloaded,
+
+            "github": {
+
+                "repository": os.getenv(
+                    "GITHUB_REPOSITORY",
+                    "Local"
+                ),
+
+                "run_id": os.getenv(
+                    "GITHUB_RUN_ID",
+                    "Manual"
+                ),
+
+                "commit": os.getenv(
+                    "GITHUB_SHA",
+                    "Local"
+                )
+            }
+        }
+
+        with open(
+            os.path.join(
+                package_history,
+                "metadata.json",
+            ),
+            "w",
+        ) as file:
+
+            json.dump(
+                metadata,
+                file,
+                indent=4,
+            )
+
+    # ==========================================================
+    # Backup Summary
+    # ==========================================================
+
+    log("[4/4] Generating Backup Summary...")
+
+    summary = {
+
+        "backup_time": timestamp,
+
+        "packages_processed": package_count,
+
+        "artifacts_downloaded": artifact_count,
+
+        "failed_downloads": failed_downloads,
+
+        "history_folder": history_folder,
+
+        "latest_folder": latest_folder,
+
+        "status": "SUCCESS"
+    }
+
+    with open(
+        os.path.join(
+            reports_folder,
+            "backup-summary.json",
+        ),
+        "w",
+    ) as file:
+
+        json.dump(
+            summary,
+            file,
+            indent=4,
+        )
+
+    # ==========================================================
+    # Console Summary
+    # ==========================================================
+
+    log("")
+    log("=" * 60)
+    log("SAP CPI Backup Completed")
+    log("=" * 60)
+
+    log(f"Packages Processed    : {package_count}")
+    log(f"Artifacts Downloaded  : {artifact_count}")
+    log(f"Failed Downloads      : {failed_downloads}")
+
+    log("")
     log(f"History Folder : {history_folder}")
-    log(f"Latest Folder : {latest_folder}")
+    log(f"Latest Folder  : {latest_folder}")
 
-    log("Backup Completed Successfully")
+    log("")
+    log("Backup Summary Generated")
+    log("reports/backup-summary.json")
 
     log("=" * 60)
 
