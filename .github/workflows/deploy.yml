@@ -3,16 +3,28 @@ name: Deploy SAP CPI iFlow
 on:
   workflow_dispatch:
     inputs:
+      environment:
+        description: "Target Environment"
+        required: true
+        type: choice
+        options:
+          - DEV
+          - TEST
+          - PROD
+
+      package:
+        description: "Package ID"
+        required: true
+
       iflow:
         description: "iFlow ID"
         required: true
-        default: "HelloWorld"
-
 jobs:
   deploy:
 
     runs-on: ubuntu-latest
-
+    environment:
+      name: ${{ github.event.inputs.environment }}
     steps:
 
       - uses: actions/checkout@v4
