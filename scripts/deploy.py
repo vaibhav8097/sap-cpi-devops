@@ -28,18 +28,16 @@ def main():
 
     response = requests.post(deploy_url, headers=headers)
 
-    print(response.status_code)
-    print(response.text)
-
     response.raise_for_status()
+
     task_id = response.text.strip()
 
     log(f"Task ID : {task_id}")
 
     with open(os.environ["GITHUB_ENV"], "a") as env:
-    env.write(f"TASK_ID={task_id}\n")
+        env.write(f"TASK_ID={task_id}\n")
 
-    log("Deployment request submitted successfully.")
+    log("Deployment Request Submitted")
 
 if __name__ == "__main__":
     main()
