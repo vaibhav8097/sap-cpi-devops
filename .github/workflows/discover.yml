@@ -1,0 +1,48 @@
+name: Discover iFlow
+
+on:
+
+  workflow_dispatch:
+
+    inputs:
+
+      iflow:
+
+        description: "iFlow ID"
+
+        required: true
+
+        default: "HelloWorld"
+
+jobs:
+
+  discover:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install requests
+
+      - name: Discover
+
+        env:
+
+          PYTHONPATH: .
+
+          BTP_CLIENT_ID: ${{ secrets.BTP_CLIENT_ID }}
+          BTP_CLIENT_SECRET: ${{ secrets.BTP_CLIENT_SECRET }}
+          BTP_TOKEN_URL: ${{ secrets.BTP_TOKEN_URL }}
+          BTP_API_URL: ${{ secrets.BTP_API_URL }}
+
+          IFLOW_ID: ${{ github.event.inputs.iflow }}
+
+        run: |
+
+          python scripts/discover.py
