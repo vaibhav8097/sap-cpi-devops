@@ -1,0 +1,26 @@
+name: SAP Authentication
+
+on:
+  workflow_dispatch:
+
+jobs:
+  auth:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Authenticate
+        env:
+          BTP_CLIENT_ID: ${{ secrets.BTP_CLIENT_ID }}
+          BTP_CLIENT_SECRET: ${{ secrets.BTP_CLIENT_SECRET }}
+          BTP_TOKEN_URL: ${{ secrets.BTP_TOKEN_URL }}
+          BTP_API_URL: ${{ secrets.BTP_API_URL }}
+        run: python scripts/auth.py
