@@ -32,6 +32,12 @@ def main():
     print(response.text)
 
     response.raise_for_status()
+    task_id = response.text.strip()
+
+    log(f"Task ID : {task_id}")
+
+    with open(os.environ["GITHUB_ENV"], "a") as env:
+    env.write(f"TASK_ID={task_id}\n")
 
     log("Deployment request submitted successfully.")
 
