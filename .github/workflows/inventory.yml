@@ -1,0 +1,36 @@
+name: SAP CPI Inventory
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  inventory:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install requests
+
+      - name: Generate Inventory
+        env:
+          PYTHONPATH: .
+          BTP_CLIENT_ID: ${{ secrets.BTP_CLIENT_ID }}
+          BTP_CLIENT_SECRET: ${{ secrets.BTP_CLIENT_SECRET }}
+          BTP_TOKEN_URL: ${{ secrets.BTP_TOKEN_URL }}
+          BTP_API_URL: ${{ secrets.BTP_API_URL }}
+        run: |
+          python scripts/inventory.py
+
+      - name: Upload Inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: inventory-report
+          path: reports/inventory/
