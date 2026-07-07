@@ -1,6 +1,10 @@
+import os
 import requests
 from requests.auth import HTTPBasicAuth
-from config.config import *
+
+CLIENT_ID = os.environ["BTP_CLIENT_ID"]
+CLIENT_SECRET = os.environ["BTP_CLIENT_SECRET"]
+TOKEN_URL = os.environ["BTP_TOKEN_URL"]
 
 response = requests.post(
     TOKEN_URL,
@@ -10,6 +14,5 @@ response = requests.post(
 
 response.raise_for_status()
 
-token = response.json()["access_token"]
-
-print(token)
+print("Authentication Successful")
+print(response.json())
