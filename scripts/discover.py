@@ -1,3 +1,4 @@
+import json
 import os
 import requests
 
@@ -6,10 +7,15 @@ from scripts.common.api import get_api_url
 from scripts.common.logger import log
 
 
+def call(url, headers):
+    r = requests.get(url, headers=headers)
+    r.raise_for_status()
+    return r.json()["d"]
+
+
 def main():
 
     token = get_access_token()
-
     api_url = get_api_url()
 
     iflow = os.environ["IFLOW_ID"]
@@ -19,27 +25,31 @@ def main():
         "Accept": "application/json"
     }
 
-    url = (
-        f"{api_url}/api/v1/"
-        f"IntegrationDesigntimeArtifacts"
-        f"(Id='{iflow}',Version='active')"
+    log(f"Discovering {iflow}")
+
+    artifact = call(
+        f"{api_url}/api/v1/IntegrationDesigntimeArtifacts(Id='{iflow}',Version='active')",
+        headers
     )
 
-    response = requests.get(url, headers=headers)
+    report = {}
 
-    response.raise_for_status()
+    report["Id"] = artifact.get("Id")
+    report["Name"] = artifact.get("Name")
+    report["Version"] = artifact.get("Version")
+    report["Package"] = artifact.get("PackageId")
+    report["Type"] = artifact.get("ArtifactType")
+    report["ModifiedBy"] = artifact.get("ModifiedBy")
+    report["ModifiedAt"] = artifact.get("ModifiedAt")
 
-    data = response.json()["d"]
+    os.makedirs("reports/inventory", exist_ok=True)
 
-    print("\n========== iFlow Information ==========")
+    file = f"reports/inventory/{iflow}.json"
 
-    print(f"ID          : {data.get('Id')}")
-    print(f"Name        : {data.get('Name')}")
-    print(f"Version     : {data.get('Version')}")
-    print(f"Package     : {data.get('PackageId')}")
-    print(f"Type        : {data.get('ArtifactType')}")
+    with open(file, "w") as f:
+        json.dump(report, f, indent=4)
 
-    print("=======================================")
+    print(json.dumps(report, indent=4))
 
 
 if __name__ == "__main__":
