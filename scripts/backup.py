@@ -3,145 +3,148 @@ import shutil
 from datetime import datetime
 
 import requests
-from requests.auth import HTTPBasicAuth
 
-# ======================================================
-# Configuration
-# ======================================================
+from scripts.common.auth import get_access_token
+from scripts.common.api import get_api_url
+from scripts.common.logger import log
+from scripts.common.utils import create_folder
 
-CLIENT_ID = os.environ["BTP_CLIENT_ID"]
-CLIENT_SECRET = os.environ["BTP_CLIENT_SECRET"]
-TOKEN_URL = os.environ["BTP_TOKEN_URL"]
-API_URL = os.environ["BTP_API_URL"].rstrip("/")
 
-# ======================================================
-# Create Backup Folders
-# ======================================================
+def main():
 
-timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    # ==========================================
+    # Create Backup Folders
+    # ==========================================
 
-history_folder = f"backup/history/{timestamp}"
-latest_folder = "backup/latest"
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-os.makedirs(history_folder, exist_ok=True)
-os.makedirs(latest_folder, exist_ok=True)
+    history_folder = os.path.join("backup", "history", timestamp)
+    latest_folder = os.path.join("backup", "latest")
 
-print("=" * 60)
-print("SAP CPI Backup Started")
-print("=" * 60)
+    create_folder(history_folder)
+    create_folder(latest_folder)
 
-# ======================================================
-# OAuth Authentication
-# ======================================================
+    log("=" * 60)
+    log("SAP CPI Backup Started")
+    log("=" * 60)
 
-print("\n[1/4] Getting OAuth Token...")
+    # ==========================================
+    # Authentication
+    # ==========================================
 
-response = requests.post(
-    TOKEN_URL,
-    data={"grant_type": "client_credentials"},
-    auth=HTTPBasicAuth(CLIENT_ID, CLIENT_SECRET),
-)
+    log("[1/4] Authenticating with SAP Integration Suite...")
 
-response.raise_for_status()
+    token = get_access_token()
+    api_url = get_api_url()
 
-token = response.json()["access_token"]
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/json",
+    }
 
-headers = {
-    "Authorization": f"Bearer {token}",
-    "Accept": "application/json",
-}
+    log("Authentication Successful")
 
-print("Authentication Successful")
+    # ==========================================
+    # Fetch Packages
+    # ==========================================
 
-# ======================================================
-# Fetch Packages
-# ======================================================
+    log("[2/4] Fetching Integration Packages...")
 
-print("\n[2/4] Fetching Integration Packages...")
-
-packages_response = requests.get(
-    f"{API_URL}/api/v1/IntegrationPackages",
-    headers=headers,
-)
-
-packages_response.raise_for_status()
-
-packages = packages_response.json()["d"]["results"]
-
-print(f"Packages Found : {len(packages)}")
-
-download_count = 0
-
-# ======================================================
-# Download Artifacts
-# ======================================================
-
-print("\n[3/4] Downloading Artifacts...\n")
-
-for package in packages:
-
-    package_id = package["Id"]
-
-    print(f"Package : {package_id}")
-
-    artifacts_response = requests.get(
-        f"{API_URL}/api/v1/IntegrationPackages('{package_id}')/IntegrationDesigntimeArtifacts",
+    packages_response = requests.get(
+        f"{api_url}/api/v1/IntegrationPackages",
         headers=headers,
     )
 
-    if artifacts_response.status_code != 200:
-        print("Unable to fetch artifacts")
-        continue
+    packages_response.raise_for_status()
 
-    artifacts = artifacts_response.json()["d"]["results"]
+    packages = packages_response.json()["d"]["results"]
 
-    for artifact in artifacts:
+    log(f"Packages Found : {len(packages)}")
 
-        artifact_id = artifact["Id"]
+    download_count = 0
 
-        print(f"   Downloading -> {artifact_id}")
+    # ==========================================
+    # Download Artifacts
+    # ==========================================
 
-        download_url = (
-            f"{API_URL}/api/v1/"
-            f"IntegrationDesigntimeArtifacts(Id='{artifact_id}',Version='active')/$value"
+    log("[3/4] Downloading Integration Artifacts...")
+
+    for package in packages:
+
+        package_id = package["Id"]
+
+        log(f"Processing Package : {package_id}")
+
+        artifacts_response = requests.get(
+            f"{api_url}/api/v1/IntegrationPackages('{package_id}')/IntegrationDesigntimeArtifacts",
+            headers=headers,
         )
 
-        zip_response = requests.get(
-            download_url,
-            headers={"Authorization": f"Bearer {token}"},
-        )
+        if artifacts_response.status_code != 200:
+            log(f"Unable to fetch artifacts for {package_id}")
+            continue
 
-        if zip_response.status_code == 200:
+        artifacts = artifacts_response.json()["d"]["results"]
 
-            history_file = os.path.join(
-                history_folder,
-                f"{artifact_id}.zip",
+        for artifact in artifacts:
+
+            artifact_id = artifact["Id"]
+
+            log(f"Downloading : {artifact_id}")
+
+            download_url = (
+                f"{api_url}/api/v1/"
+                f"IntegrationDesigntimeArtifacts(Id='{artifact_id}',Version='active')/$value"
             )
 
-            with open(history_file, "wb") as file:
-                file.write(zip_response.content)
-
-            shutil.copy2(
-                history_file,
-                os.path.join(latest_folder, f"{artifact_id}.zip"),
+            zip_response = requests.get(
+                download_url,
+                headers={
+                    "Authorization": f"Bearer {token}"
+                },
             )
 
-            download_count += 1
+            if zip_response.status_code == 200:
 
-# ======================================================
-# Summary
-# ======================================================
+                history_file = os.path.join(
+                    history_folder,
+                    f"{artifact_id}.zip",
+                )
 
-print("\n[4/4] Backup Summary")
+                with open(history_file, "wb") as file:
+                    file.write(zip_response.content)
 
-print("-" * 60)
+                shutil.copy2(
+                    history_file,
+                    os.path.join(
+                        latest_folder,
+                        f"{artifact_id}.zip",
+                    ),
+                )
 
-print(f"Packages Processed : {len(packages)}")
-print(f"Artifacts Downloaded : {download_count}")
+                download_count += 1
 
-print(f"History Folder : {history_folder}")
-print(f"Latest Folder  : {latest_folder}")
+            else:
+                log(f"Failed to download {artifact_id}")
 
-print("\nBackup Completed Successfully")
+    # ==========================================
+    # Summary
+    # ==========================================
 
-print("=" * 60)
+    log("[4/4] Backup Summary")
+
+    log("-" * 60)
+
+    log(f"Packages Processed : {len(packages)}")
+    log(f"Artifacts Downloaded : {download_count}")
+
+    log(f"History Folder : {history_folder}")
+    log(f"Latest Folder : {latest_folder}")
+
+    log("Backup Completed Successfully")
+
+    log("=" * 60)
+
+
+if __name__ == "__main__":
+    main()
