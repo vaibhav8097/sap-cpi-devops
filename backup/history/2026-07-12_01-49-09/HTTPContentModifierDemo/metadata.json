@@ -1,0 +1,17 @@
+{
+    "package": "HTTPContentModifierDemo",
+    "backup_time": "2026-07-12_01-49-09",
+    "artifact_count": 1,
+    "artifacts": [
+        {
+            "artifact": "HTTP_ContentModifier_flow",
+            "type": null,
+            "version": "1.0.2"
+        }
+    ],
+    "github": {
+        "repository": "vaibhav8097/sap-cpi-devops",
+        "run_id": "29175813556",
+        "commit": "7a1653fc2ffea40d8a758fe6744dfc4a45869d93"
+    }
+}
