@@ -1,0 +1,17 @@
+{
+    "package": "test",
+    "backup_time": "2026-07-14_01-28-36",
+    "artifact_count": 1,
+    "artifacts": [
+        {
+            "artifact": "test",
+            "type": null,
+            "version": "1.0.0"
+        }
+    ],
+    "github": {
+        "repository": "vaibhav8097/sap-cpi-devops",
+        "run_id": "29298631285",
+        "commit": "2255e4a7e8cff392c4f4c9a48025077288658344"
+    }
+}
