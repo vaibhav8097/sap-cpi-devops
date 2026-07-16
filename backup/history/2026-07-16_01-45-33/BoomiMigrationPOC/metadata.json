@@ -1,0 +1,37 @@
+{
+    "package": "BoomiMigrationPOC",
+    "backup_time": "2026-07-16_01-45-33",
+    "artifact_count": 5,
+    "artifacts": [
+        {
+            "artifact": "test_flow",
+            "type": null,
+            "version": "1.0.0"
+        },
+        {
+            "artifact": "HelloWorld1",
+            "type": null,
+            "version": "1.0.2"
+        },
+        {
+            "artifact": "iflow_for_test",
+            "type": null,
+            "version": "1.0.4"
+        },
+        {
+            "artifact": "Vaibhav_test",
+            "type": null,
+            "version": "1.0.5"
+        },
+        {
+            "artifact": "iFlow_A",
+            "type": null,
+            "version": "1.0.0"
+        }
+    ],
+    "github": {
+        "repository": "vaibhav8097/sap-cpi-devops",
+        "run_id": "29464910779",
+        "commit": "32393df84bc8c5a743e0b36a8973ce28833ed413"
+    }
+}
