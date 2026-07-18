@@ -1,0 +1,17 @@
+{
+    "package": "CICDPOCPACKAGE",
+    "backup_time": "2026-07-18_01-29-14",
+    "artifact_count": 1,
+    "artifacts": [
+        {
+            "artifact": "CI_CD_GOLDEN_IFLOW",
+            "type": null,
+            "version": "Active"
+        }
+    ],
+    "github": {
+        "repository": "vaibhav8097/sap-cpi-devops",
+        "run_id": "29625274757",
+        "commit": "eb1847552b5fd577d7a25016acc21d4056ab28c8"
+    }
+}

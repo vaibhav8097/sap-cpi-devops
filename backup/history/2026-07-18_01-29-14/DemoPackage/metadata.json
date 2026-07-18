@@ -1,0 +1,27 @@
+{
+    "package": "DemoPackage",
+    "backup_time": "2026-07-18_01-29-14",
+    "artifact_count": 3,
+    "artifacts": [
+        {
+            "artifact": "OrderProcessing",
+            "type": null,
+            "version": "1.0.2"
+        },
+        {
+            "artifact": "My_First_iFlow",
+            "type": null,
+            "version": "Active"
+        },
+        {
+            "artifact": "Test_iflow",
+            "type": null,
+            "version": "1.0.0"
+        }
+    ],
+    "github": {
+        "repository": "vaibhav8097/sap-cpi-devops",
+        "run_id": "29625274757",
+        "commit": "eb1847552b5fd577d7a25016acc21d4056ab28c8"
+    }
+}

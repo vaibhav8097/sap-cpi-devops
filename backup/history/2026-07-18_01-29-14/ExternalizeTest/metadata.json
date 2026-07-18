@@ -1,0 +1,22 @@
+{
+    "package": "ExternalizeTest",
+    "backup_time": "2026-07-18_01-29-14",
+    "artifact_count": 2,
+    "artifacts": [
+        {
+            "artifact": "Externalize_Demo",
+            "type": null,
+            "version": "1.0.2"
+        },
+        {
+            "artifact": "Test2",
+            "type": null,
+            "version": "1.0.0"
+        }
+    ],
+    "github": {
+        "repository": "vaibhav8097/sap-cpi-devops",
+        "run_id": "29625274757",
+        "commit": "eb1847552b5fd577d7a25016acc21d4056ab28c8"
+    }
+}
