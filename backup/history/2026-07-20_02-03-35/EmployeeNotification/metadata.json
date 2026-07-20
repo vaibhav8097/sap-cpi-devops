@@ -1,0 +1,22 @@
+{
+    "package": "EmployeeNotification",
+    "backup_time": "2026-07-20_02-03-35",
+    "artifact_count": 2,
+    "artifacts": [
+        {
+            "artifact": "Employee_Notification_API_copy",
+            "type": null,
+            "version": "1.0.2"
+        },
+        {
+            "artifact": "Employee_Notification_API_copy_copy",
+            "type": null,
+            "version": "1.0.2"
+        }
+    ],
+    "github": {
+        "repository": "vaibhav8097/sap-cpi-devops",
+        "run_id": "29711858930",
+        "commit": "dfe2d3e48df746946e0816efd129ee3a9775ef2f"
+    }
+}
