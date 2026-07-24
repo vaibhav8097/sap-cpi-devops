@@ -1,0 +1,22 @@
+{
+    "package": "BoomiMigPoc",
+    "backup_time": "2026-07-24_01-49-00",
+    "artifact_count": 2,
+    "artifacts": [
+        {
+            "artifact": "boomi_mig_test_flow",
+            "type": null,
+            "version": "1.0.0"
+        },
+        {
+            "artifact": "test_iflow",
+            "type": null,
+            "version": "1.0.1"
+        }
+    ],
+    "github": {
+        "repository": "vaibhav8097/sap-cpi-devops",
+        "run_id": "30059967783",
+        "commit": "169ccade4ac3b2a7de4cd32e1ba787e1d98fc38a"
+    }
+}
