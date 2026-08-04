@@ -1,0 +1,17 @@
+{
+    "package": "TestPackage",
+    "backup_time": "2026-08-04_01-28-31",
+    "artifact_count": 1,
+    "artifacts": [
+        {
+            "artifact": "test_iflows",
+            "type": null,
+            "version": "1.0.0"
+        }
+    ],
+    "github": {
+        "repository": "vaibhav8097/sap-cpi-devops",
+        "run_id": "30868844881",
+        "commit": "083b64902ffed0d8cc60073a939916b4dd608ed2"
+    }
+}
